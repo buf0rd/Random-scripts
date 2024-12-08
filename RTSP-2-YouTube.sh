@@ -14,7 +14,7 @@ BUF_SIZE="12000k" # Set the buffer size
 echo "Do you want to include audio in the stream? (yes/no)"
 read -r INCLUDE_AUDIO
 
-# Build the FFmpeg command based on the user's choice
+# Build the audio options based on the user's choice
 if [[ "$INCLUDE_AUDIO" == "yes" || "$INCLUDE_AUDIO" == "y" ]]; then
     AUDIO_OPTIONS="-c:a aac -b:a $AUDIO_BITRATE" # Include audio encoding options
     echo "Audio will be included in the stream."
@@ -23,8 +23,10 @@ else
     echo "Audio will NOT be included in the stream."
 fi
 
-# Run FFmpeg command
-ffmpeg -i "$RTSP_URL" \
+# Run FFmpeg command with RTSP optimizations
+ffmpeg \
+    -rtsp_transport tcp -buffer_size 10000000 -fflags +genpts+discardcorrupt -max_delay 5000000 -rw_timeout 15000000 -fflags nobuffer \
+    -i "$RTSP_URL" \
     -s "$RESOLUTION" -r "$FRAMERATE" \
     -c:v libx264 -preset veryfast -maxrate "$VIDEO_BITRATE" -bufsize "$BUF_SIZE" \
     -pix_fmt yuv420p -g 60 \
