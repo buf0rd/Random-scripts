@@ -10,10 +10,23 @@ VIDEO_BITRATE="6000k" # Set the video bitrate
 AUDIO_BITRATE="128k" # Set the audio bitrate
 BUF_SIZE="12000k" # Set the buffer size
 
+# Prompt the user to decide whether audio should be included
+echo "Do you want to include audio in the stream? (yes/no)"
+read -r INCLUDE_AUDIO
+
+# Build the FFmpeg command based on the user's choice
+if [[ "$INCLUDE_AUDIO" == "yes" || "$INCLUDE_AUDIO" == "y" ]]; then
+    AUDIO_OPTIONS="-c:a aac -b:a $AUDIO_BITRATE" # Include audio encoding options
+    echo "Audio will be included in the stream."
+else
+    AUDIO_OPTIONS="-an" # Disable audio
+    echo "Audio will NOT be included in the stream."
+fi
+
 # Run FFmpeg command
 ffmpeg -i "$RTSP_URL" \
     -s "$RESOLUTION" -r "$FRAMERATE" \
     -c:v libx264 -preset veryfast -maxrate "$VIDEO_BITRATE" -bufsize "$BUF_SIZE" \
     -pix_fmt yuv420p -g 60 \
-    -c:a aac -b:a "$AUDIO_BITRATE" \
+    $AUDIO_OPTIONS \
     -f flv "$YOUTUBE_URL/$STREAM_KEY"
